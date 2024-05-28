@@ -128,3 +128,11 @@ h1 {
   background-color: #242424;
   color:white; /* Darker blue on hover */
 }
+.heart{
+  position: absolute; /* Position the button relative to its nearest positioned ancestor */
+  top: 0px; /* Distance from the top */
+  right: 250px; /* Distance from the right */
+  padding: 10px 20px;
+height: 70px;
+width: 100px;
+}
