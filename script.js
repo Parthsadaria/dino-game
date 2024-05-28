@@ -143,10 +143,13 @@ function handleGameOver() {
 
 // Add touch event listeners
 document.addEventListener("touchstart", onTouchStart);
-document.addEventListener("touchend", onTouchEnd);
 
-function onTouchStart() {
-  startGame();
+function onTouchStart(event) {
+  if (!gameStarted) {
+    startGame();
+  } else {
+    onJump({ code: "Space" }); // Simulate spacebar press for jumping
+  }
 }
 
 function onTouchEnd() {
@@ -296,12 +299,9 @@ function updateCactus(delta, speedScale) {
     if (getCustomProperty(cactus, "--left") <= -100) {
       cactus.remove(); /* remove cactus off screen so it doesn't impair game performance */
     }
-  });
-
-  if (nextCactusTime <= 0) {
+  });if (nextCactusTime <= 0) {
     createCactus();
-    nextCactusTime =
-      randomizer(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) / speedScale;
+    nextCactusTime = randomizer(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) / speedScale;
   }
   nextCactusTime -= delta;
 }
