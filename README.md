@@ -1,5 +1,5 @@
 # Chrome Dino Game
-
+## TRY https://parthsadaria.github.io/dino-game/
 > This is a recreation of everyone's favorite offline companion, google chrome dinosaur game, with the same classic monochrome interface.
 ## BGM AND NEW STUFF added
 ## Instructions
