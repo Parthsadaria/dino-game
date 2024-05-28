@@ -1,0 +1,330 @@
+const SPEED_SCALE = 0.00001;
+
+const game = document.querySelector("#game");
+const scoreDisplay = document.querySelector("#score");
+const startMessage = document.querySelector("#start-message");
+const gameoverMessage = document.querySelector("#gameover-message");
+
+document.addEventListener("keydown", startGame, { once: true });
+
+/* general variables */
+let lastTime;
+let speedScale;
+let score;
+const bgm = new Audio("SpearofJustice.mp3");
+bgm.loop = true; // Loop the background music
+
+function playBGM() {
+  bgm.play();
+}
+
+function pauseBGM() {
+  bgm.pause();
+}
+
+/* frame update */
+function update(time) { 
+  if (lastTime == null) {
+    lastTime = time;
+    window.requestAnimationFrame(update);
+    return;
+  }
+
+  const delta = time - lastTime;
+
+  updateGround(delta, speedScale);
+  updateDino(delta, speedScale);
+  updateCactus(delta, speedScale);
+  updateSpeedScale(delta);
+  updateScore(delta);
+
+  if (checkGameOver()) return handleGameOver();
+
+  lastTime = time;
+  window.requestAnimationFrame(update);
+}
+function startGame() {
+  lastTime = null;
+  speedScale = 1;
+  score = 0;
+  setupGround();
+  setupDino();
+  setupCactus();
+  startMessage.classList.add("hide");
+  gameoverMessage.classList.add("hide");
+  window.requestAnimationFrame(update);
+  playBGM();
+}
+
+// Event listener setup
+document.body.addEventListener("click", startGame, { once: true });
+document.body.addEventListener("keypress", startGame, { once: true });
+document.addEventListener("keydown", startGame, { once: true });
+
+
+/* speeds up the game over time */
+function updateSpeedScale(delta) { 
+  speedScale += delta * SPEED_SCALE;
+}
+
+function updateScore(delta) {
+  score += delta * 0.01; 
+  scoreDisplay.textContent = Math.floor(score);
+}
+
+/* collision conditions */
+function checkCollision(rect1, rect2) {
+  const offsetX = 10; // Adjust this value to shrink the hitbox horizontally
+  const offsetY = 10; // Adjust this value to shrink the hitbox vertically
+
+  return (
+    rect1.left + offsetX < rect2.right &&
+    rect1.top + offsetY < rect2.bottom &&
+    rect1.right - offsetX > rect2.left &&
+    rect1.bottom - offsetY > rect2.top
+  );
+}
+const invertButton = document.getElementById('invert-button');
+let isInverted = false;
+
+invertButton.addEventListener('click', () => {
+  if (!isInverted) {
+    invertColors();
+    // Remove the event listener for the spacebar
+    document.removeEventListener('keydown', spacebarHandler);
+  } else {
+    restoreColors();
+    // Add the event listener for the spacebar
+    document.addEventListener('keydown', spacebarHandler);
+  }
+  isInverted = !isInverted;
+  invertButton.blur(); // Remove focus from the button
+});
+
+function invertColors() {
+  document.body.style.backgroundColor = 'black';
+  document.body.style.color = 'white';
+  document.querySelectorAll('.game, .ground, .dino, .cactus, .gameover-message, .score, .start-message').forEach(element => {
+    element.style.filter = 'invert(100%)';
+  });
+}
+
+function restoreColors() {
+  document.body.style.backgroundColor = '';
+  document.body.style.color = '';
+  document.querySelectorAll('.game, .ground, .dino, .cactus, .gameover-message, .score, .start-message').forEach(element => {
+    element.style.filter = '';
+  });
+}
+
+function spacebarHandler(event) {
+  if (event.code === 'Space') {
+    event.preventDefault(); // Prevent the default spacebar behavior
+  }
+}
+
+// Add event listener for the spacebar initially
+document.addEventListener('keydown', spacebarHandler);
+
+
+function checkGameOver() {
+  const dinoRect = getDinoRect();
+  return getCactusRects().some(rect => checkCollision(rect, dinoRect)); /* check collision with any of the cactus */
+}
+
+function handleGameOver() {
+  setDinoLose();
+  setTimeout(() => {
+    document.body.addEventListener("click", startGame, { once: true }); // For both desktop and mobile
+    // For mobile
+
+    gameoverMessage.classList.remove("hide");
+  }, 100);
+  pauseBGM();
+}
+// Add touch event listeners
+document.addEventListener("touchstart", onTouchStart);
+document.addEventListener("touchend", onTouchEnd);
+
+// Touch event handlers
+function onTouchStart() {
+  startGame();
+}
+
+function onTouchEnd() {
+  // Implement any actions you want to perform when touch ends
+}
+
+
+
+
+
+/* HANDLING CSS PROPERTIES */
+
+/* get property value */
+function getCustomProperty(elem, prop) {
+  return parseFloat(getComputedStyle(elem).getPropertyValue(prop)) || 0;
+}
+
+/* set property value */
+function setCustomProperty(elem, prop, value) {
+  elem.style.setProperty(prop, value);
+}
+
+/* increment the property value */
+function incrementCustomProperty(elem, prop, inc) {
+  setCustomProperty(elem, prop, getCustomProperty(elem, prop) + inc);
+}
+
+
+/* GROUND MOVEMENT */
+
+const GROUND_SPEED = 0.05;
+const grounds = document.querySelectorAll(".ground");
+
+function setupGround() {
+  setCustomProperty(grounds[0], "--left", 0);
+  setCustomProperty(grounds[1], "--left", 300);
+}
+
+function updateGround(delta, speedScale) {
+  grounds.forEach(ground => {
+    incrementCustomProperty(ground, "--left", delta * speedScale * GROUND_SPEED * -1); /* moves the ground according to game speed */
+
+    if (getCustomProperty(ground, "--left") <= -300) {
+      incrementCustomProperty(ground, "--left", 600); /* loop the elements */
+    }
+  });
+}
+
+/* DINOSAUR MOVEMENT */
+
+const dino = document.querySelector("#dino");
+const JUMP_SPEED = 0.45;
+const GRAVITY = 0.0015;
+const DINO_FRAME_COUNT = 2;
+const FRAME_TIME = 100;
+
+let isJumping;
+let dinoFrame;
+let currentFrameTime;
+let yVelocity;
+
+function setupDino() {
+  isJumping = false;
+  dinoFrame = 0;
+  currentFrameTime = 0;
+  yVelocity = 0;
+
+  setCustomProperty(dino, "--bottom", 0);
+  document.removeEventListener("keydown", onJump); /* reset the dinosaur if the player dies while jumping */
+  document.addEventListener("keydown", onJump);
+}
+
+function updateDino(delta, speedScale) {
+  handleRun(delta, speedScale);
+  handleJump(delta);
+}
+
+function getDinoRect() {
+  return dino.getBoundingClientRect(); /* get the dinosaur hitbox */
+}
+
+function setDinoLose() {
+  dino.src = "assets/dino-lose.png";
+}
+
+function handleRun(delta, speedScale) {
+  if (isJumping) {
+    dino.src = `assets/dino-stationary.png`;
+    return;
+  }
+
+  if (currentFrameTime >= FRAME_TIME) {
+    dinoFrame = (dinoFrame + 1) % DINO_FRAME_COUNT;
+    dino.src = `assets/dino-run-${dinoFrame}.png`; /* switch between images to simulate movement */
+    currentFrameTime -= FRAME_TIME;
+  }
+  currentFrameTime += delta * speedScale;
+}
+
+function handleJump(delta) {
+  if (!isJumping) return;
+
+  incrementCustomProperty(dino, "--bottom", yVelocity * delta);
+
+  if (getCustomProperty(dino, "--bottom") <= 0) {
+    setCustomProperty(dino, "--bottom", 0);
+    isJumping = false;
+  }
+
+  yVelocity -= GRAVITY * delta;
+}
+
+function onJump(e) {
+  if (e.code !== "Space" || isJumping) return;
+
+  yVelocity = JUMP_SPEED;
+  isJumping = true;
+
+  // Play the jump sound
+  const jumpSound = document.getElementById('jumpSound');
+  jumpSound.currentTime = 0; // Restart the sound if it's already playing
+  jumpSound.play();
+}
+document.addEventListener("mousedown", jump);
+function jump() {
+  if (!isJumping) {
+    yVelocity = JUMP_SPEED;
+    isJumping = true;
+  }
+}
+
+/* ADD CACTUS */
+
+const CACTUS_SPEED = 0.05;
+const CACTUS_INTERVAL_MIN = 500;
+const CACTUS_INTERVAL_MAX = 2000;
+
+let nextCactusTime;
+
+function setupCactus() {
+  nextCactusTime = CACTUS_INTERVAL_MIN;
+  document.querySelectorAll(".cactus").forEach(cactus => {
+    cactus.remove(); /* remove cactus when game restart */
+  })
+}
+
+function updateCactus(delta, speedScale) {
+  document.querySelectorAll(".cactus").forEach(cactus => {
+    incrementCustomProperty(cactus, "--left", delta * speedScale * CACTUS_SPEED * -1);
+    if (getCustomProperty(cactus, "--left") <= -100) {
+      cactus.remove(); /* remove cactus off screen so it doesn't impair game performance */
+    }
+  })
+
+  if (nextCactusTime <= 0) {
+    createCactus();
+    nextCactusTime =
+      randomizer(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) / speedScale;
+  }
+  nextCactusTime -= delta;
+}
+
+function getCactusRects() {
+  return [...document.querySelectorAll(".cactus")].map(cactus => {
+    return cactus.getBoundingClientRect(); /* get the hitbox of all the cactus on the screen */
+  })
+}
+
+function createCactus() {
+  const cactus = document.createElement("img");
+  cactus.src = "assets/cactus.png";
+  cactus.classList.add("cactus");
+  setCustomProperty(cactus, "--left", 100);
+  game.append(cactus); 
+}
+
+function randomizer(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min); /* choose a number between minimum and maximum */
+}

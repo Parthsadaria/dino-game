@@ -1,0 +1,130 @@
+:root {
+  --txt-primary: #535353;
+  --txt-hover: #292929;
+  --background: #F7F7F7;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Press Start 2P', cursive;
+  color: var(--txt-primary);
+  background-color: var(--background);
+  margin: 0;
+  overflow: hidden; /* Prevent scrollbars */
+}
+.title-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+}
+
+h1 {
+  display: inline;
+  margin: 0;
+  white-space: nowrap; /* Ensures the text stays on a single line */
+}
+
+.game {
+  position: fixed;
+  width: 100vw;
+  height: 30vh;
+  overflow: hidden;
+  top: 20vh;
+}
+
+
+
+
+.score {
+  position: absolute;
+  right: 5vmin;
+  top: 1vmin;
+  font-size: 30px;
+}
+
+.start-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: .8rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.gameover-message {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: .8rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.gameover-message p {
+  letter-spacing: .5em;
+}
+
+.gameover-message span {
+  font-size: .6rem;
+  text-transform: none;
+}
+
+.ground {
+  --left: 0;
+  width: 300%;
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--left) * 1%);
+}
+
+.dino {
+  --bottom: 0;
+  height: 30%;
+  position: absolute;
+  left: 1%;
+  bottom: calc(var(--bottom) * 1%);
+}
+
+.cactus {
+  height: 30%;
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--left) * 1%);
+}
+
+.hide {
+  display: none;
+}
+#invert-button {
+  position: absolute; /* Position the button relative to its nearest positioned ancestor */
+  top: 20px; /* Distance from the top */
+  right: 20px; /* Distance from the right */
+  padding: 10px 20px;
+  background-color: #8a8a8a; /* Blue background */
+  font-family: 'Press Start 2P', cursive;
+  color: rgb(0, 0, 0); /* White text */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Cursor on hover */
+  transition: background-color 0.3s;
+  font-size: small; /* Smooth transition */
+}
+
+#invert-button:hover {
+  background-color: #242424;
+  color:white; /* Darker blue on hover */
+}
