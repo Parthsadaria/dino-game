@@ -1,7 +1,7 @@
 # Chrome Dino Game
 
 > This is a recreation of everyone's favorite offline companion, google chrome dinosaur game, with the same classic monochrome interface.
-
+## BGM AND NEW STUFF added
 ## Instructions
 - Press `Any Key` to start the game.
 - Press `Space Bar` to jump and avoid cactus.
