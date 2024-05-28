@@ -5,7 +5,7 @@
 ## Instructions
 - Press `Any Key` to start the game.
 - Press `Space Bar` to jump and avoid cactus.
-
+## Works on mobile too :-)
 ## Features
 - Cactus obstacles
 - Score counter
