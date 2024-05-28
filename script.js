@@ -5,14 +5,14 @@ const scoreDisplay = document.querySelector("#score");
 const startMessage = document.querySelector("#start-message");
 const gameoverMessage = document.querySelector("#gameover-message");
 
-document.addEventListener("keydown", startGame, { once: true });
+const bgm = new Audio("SpearofJustice.mp3");
+bgm.loop = true; // Loop the background music
 
 /* general variables */
 let lastTime;
 let speedScale;
 let score;
-const bgm = new Audio("SpearofJustice.mp3");
-bgm.loop = true; // Loop the background music
+let gameStarted = false;
 
 function playBGM() {
   bgm.play();
@@ -43,7 +43,10 @@ function update(time) {
   lastTime = time;
   window.requestAnimationFrame(update);
 }
+
 function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
   lastTime = null;
   speedScale = 1;
   score = 0;
@@ -57,10 +60,9 @@ function startGame() {
 }
 
 // Event listener setup
-document.body.addEventListener("click", startGame, { once: true });
-document.body.addEventListener("keypress", startGame, { once: true });
-document.addEventListener("keydown", startGame, { once: true });
-
+document.addEventListener("keydown", startGame);
+document.body.addEventListener("click", startGame);
+document.body.addEventListener("keypress", startGame);
 
 /* speeds up the game over time */
 function updateSpeedScale(delta) { 
@@ -84,17 +86,16 @@ function checkCollision(rect1, rect2) {
     rect1.bottom - offsetY > rect2.top
   );
 }
+
 const invertButton = document.getElementById('invert-button');
 let isInverted = false;
 
 invertButton.addEventListener('click', () => {
   if (!isInverted) {
     invertColors();
-    // Remove the event listener for the spacebar
     document.removeEventListener('keydown', spacebarHandler);
   } else {
     restoreColors();
-    // Add the event listener for the spacebar
     document.addEventListener('keydown', spacebarHandler);
   }
   isInverted = !isInverted;
@@ -126,7 +127,6 @@ function spacebarHandler(event) {
 // Add event listener for the spacebar initially
 document.addEventListener('keydown', spacebarHandler);
 
-
 function checkGameOver() {
   const dinoRect = getDinoRect();
   return getCactusRects().some(rect => checkCollision(rect, dinoRect)); /* check collision with any of the cactus */
@@ -135,18 +135,16 @@ function checkGameOver() {
 function handleGameOver() {
   setDinoLose();
   setTimeout(() => {
-    document.body.addEventListener("click", startGame, { once: true }); // For both desktop and mobile
-    // For mobile
-
+    gameStarted = false;
     gameoverMessage.classList.remove("hide");
   }, 100);
   pauseBGM();
 }
+
 // Add touch event listeners
 document.addEventListener("touchstart", onTouchStart);
 document.addEventListener("touchend", onTouchEnd);
 
-// Touch event handlers
 function onTouchStart() {
   startGame();
 }
@@ -154,10 +152,6 @@ function onTouchStart() {
 function onTouchEnd() {
   // Implement any actions you want to perform when touch ends
 }
-
-
-
-
 
 /* HANDLING CSS PROPERTIES */
 
@@ -175,7 +169,6 @@ function setCustomProperty(elem, prop, value) {
 function incrementCustomProperty(elem, prop, inc) {
   setCustomProperty(elem, prop, getCustomProperty(elem, prop) + inc);
 }
-
 
 /* GROUND MOVEMENT */
 
@@ -272,7 +265,9 @@ function onJump(e) {
   jumpSound.currentTime = 0; // Restart the sound if it's already playing
   jumpSound.play();
 }
+
 document.addEventListener("mousedown", jump);
+
 function jump() {
   if (!isJumping) {
     yVelocity = JUMP_SPEED;
@@ -291,8 +286,8 @@ let nextCactusTime;
 function setupCactus() {
   nextCactusTime = CACTUS_INTERVAL_MIN;
   document.querySelectorAll(".cactus").forEach(cactus => {
-    cactus.remove(); /* remove cactus when game restart */
-  })
+    cactus.remove(); /* remove cactus when game restarts */
+  });
 }
 
 function updateCactus(delta, speedScale) {
@@ -301,7 +296,7 @@ function updateCactus(delta, speedScale) {
     if (getCustomProperty(cactus, "--left") <= -100) {
       cactus.remove(); /* remove cactus off screen so it doesn't impair game performance */
     }
-  })
+  });
 
   if (nextCactusTime <= 0) {
     createCactus();
@@ -314,7 +309,7 @@ function updateCactus(delta, speedScale) {
 function getCactusRects() {
   return [...document.querySelectorAll(".cactus")].map(cactus => {
     return cactus.getBoundingClientRect(); /* get the hitbox of all the cactus on the screen */
-  })
+  });
 }
 
 function createCactus() {
