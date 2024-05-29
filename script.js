@@ -60,9 +60,22 @@ function startGame() {
 }
 
 // Event listener setup
-document.addEventListener("keydown", startGame);
-document.body.addEventListener("click", startGame);
-document.body.addEventListener("keypress", startGame);
+function setupEventListeners() {
+  document.addEventListener("keydown", startGameOnce);
+  document.body.addEventListener("click", startGameOnce);
+  document.body.addEventListener("touchstart", startGameOnce);
+}
+
+function removeEventListeners() {
+  document.removeEventListener("keydown", startGameOnce);
+  document.body.removeEventListener("click", startGameOnce);
+  document.body.removeEventListener("touchstart", startGameOnce);
+}
+
+function startGameOnce() {
+  startGame();
+  removeEventListeners();
+}
 
 /* speeds up the game over time */
 function updateSpeedScale(delta) { 
@@ -137,19 +150,17 @@ function handleGameOver() {
   setTimeout(() => {
     gameStarted = false;
     gameoverMessage.classList.remove("hide");
+    setupEventListeners(); // Re-setup event listeners
   }, 100);
   pauseBGM();
 }
 
 // Add touch event listeners
 document.addEventListener("touchstart", onTouchStart);
+document.addEventListener("touchend", onTouchEnd);
 
-function onTouchStart(event) {
-  if (!gameStarted) {
-    startGame();
-  } else {
-    onJump({ code: "Space" }); // Simulate spacebar press for jumping
-  }
+function onTouchStart() {
+  startGameOnce();
 }
 
 function onTouchEnd() {
@@ -299,9 +310,12 @@ function updateCactus(delta, speedScale) {
     if (getCustomProperty(cactus, "--left") <= -100) {
       cactus.remove(); /* remove cactus off screen so it doesn't impair game performance */
     }
-  });if (nextCactusTime <= 0) {
+  });
+
+  if (nextCactusTime <= 0) {
     createCactus();
-    nextCactusTime = randomizer(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) / speedScale;
+    nextCactusTime =
+      randomizer(CACTUS_INTERVAL_MIN, CACTUS_INTERVAL_MAX) / speedScale;
   }
   nextCactusTime -= delta;
 }
@@ -323,3 +337,6 @@ function createCactus() {
 function randomizer(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min); /* choose a number between minimum and maximum */
 }
+
+// Initialize event listeners
+setupEventListeners();
